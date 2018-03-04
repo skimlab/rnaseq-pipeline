@@ -1,4 +1,17 @@
-# Copyright 2018 CRI lab at PVAMU. All Rights Reserved.
+# Copyright 2015 CRI lab at PVAMU. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
 
 """Pipline on Preprocessing RNAseq"""
 
@@ -13,7 +26,7 @@ __doc__ = 'Pipline for Preprocessing RNAseq DATA'
 __version__ = 'version 0.01'
 
 SALMON = "/home/xishuang/Kim/salmon/bin/salmon"
-SAMTOOLS = "/home/xishuang/Kim/"
+SAMTOOLS = "/home/xishuang/Kim/samtools/samtools"
 MAX_PROCESSES = 10
 
 class Usage(Exception):
@@ -24,10 +37,58 @@ def RNAseqPrerpocessing(input_dir, input_format, output_dir, tool, index_file):
     if input_format == 'fastq':
         quantify(input_dir, output_dir, tool, index_file)
     elif input_format == 'bam':
-        print 'Build index first'
+        if not os.path.exists('./fastq'):
+            os.mkdir('./fastq')
+            convert_bam_to_fastq(input_dir, './fastq')
+            quantify('./fastq', output_dir, tool, index_file)
 
-def postprocessing():
+def merge_salmon_quant_result(output_dir):
+    file_vector = []
+    TPM = []
+    for dirs, files in os.walk(output_dir):
+        count = 0
+        for file_name in files:
+            if file_name == 'quant.sf'
+                file_path = os.path.join(dirs, file_name)
+                fc = open(file_path)
+                d = fc.readlines()
+                count =  count + 1
+                if count == 1:
+                    line_num = 0
+                    for line in d:
+                        line_num = line_num + 1
+                        v = line.split('\t')
+                        tmp_v = []
+                        tmp_v.append(v[0])
+                        tmp_v.append(v[1])
+                        tmp_v.append(v[2])
+                        if line_num == 1:
+                            tmp_v.append('TPM' + str(count))
+                        else:
+                            tmp_v.append(v[3])
+                        TPM.append(tmp_v)
+                else:
+                    line_num = 0
+                    for line in d:
+                        line_num = line_num + 1
+                        v = line.split('\t')
+                        if line_num == 1:
+                            TPM[line_num - 1].append('TPM' + str(count))
+                        else:
+                            TPM[line_num - 1].append(v[3])
+
+
+
     return 0
+
+def convert_bam_to_fastq(input_dir, tmp_dir):
+    for dirs, files in os.walk(self.input_dir):
+        for file_name in files:
+            input_path = os.path.join(input_dir, file_name)
+            output_path = os.path.join(tmp_dir, os.path.splitext(file_name)[0] + ".fastq")
+            cmd = SAMTOOLS + ' fastq ' + input_path + ' > ' + output_path
+            os.system(cmd)
+
 
 def quantify(input_dir, output_dir, tool, index_file):
     if self.tool == 'salmon':
@@ -41,18 +102,12 @@ def salmon_quantify(input_dir, output_dir, index_file,file_name):
 
 def salmon_quantify_mp(input_dir, output_dir, index_file):
     for root, dirs, files in os.walk(self.input_dir):
-        if len(files) > MAX_PROCESSES:
-            pool = multiprocessing.Pool(processes = MAX_PROCESSES)
-            for file_name in files:
-                pool.apply_async(salmon_quantify, (input_dir, output_dir, index_file,file_name,))
-            pool.close()
-            pool.join()
-        else:
-            jobs = []
-            for file_name in files:
-                p = multiprocessing.Process(target=salmon_quantify, args=(input_dir, output_dir, index_file,file_name,))
-                jobs.append(p)
-                p.start()
+        pool = multiprocessing.Pool(processes = MAX_PROCESSES)
+        for file_name in files:
+            pool.apply_async(salmon_quantify, (input_dir, output_dir, index_file,file_name,))
+        pool.close()
+        pool.join()
+        
         print 'Quantification finished!'
     return 0
 
