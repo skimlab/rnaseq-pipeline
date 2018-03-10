@@ -37,62 +37,104 @@ def RNAseqPrerpocessing(input_dir, input_format, output_dir, tool, index_file):
     if input_format == 'fastq':
         quantify(input_dir, output_dir, tool, index_file)
     elif input_format == 'bam':
+        print 'processing bam'
         if not os.path.exists('./fastq'):
             os.mkdir('./fastq')
-            convert_bam_to_fastq(input_dir, './fastq')
-            quantify('./fastq', output_dir, tool, index_file)
+        #convert_bam_to_fastq(input_dir, './fastq')
+        quantify('./fastq', output_dir, tool, index_file)
 
 def merge_salmon_quant_result(output_dir):
     file_vector = []
     TPM = []
-    for dirs, files in os.walk(output_dir):
-        count = 0
+    NumReads = []
+    print output_dir
+    count = 0
+    for root, dirs, files in os.walk(output_dir):
+        #count = count + 1
         for file_name in files:
-            if file_name == 'quant.sf'
-                file_path = os.path.join(dirs, file_name)
+            #print root
+            #print dirs
+            if file_name == 'quant.sf':
+                count = count + 1
+                #print root
+                #print file_name
+                #print dirs
+                file_path = os.path.join(root, file_name)
+                #print file_path
                 fc = open(file_path)
                 d = fc.readlines()
-                count =  count + 1
+                #count =  count + 1
                 if count == 1:
                     line_num = 0
                     for line in d:
                         line_num = line_num + 1
-                        v = line.split('\t')
-                        tmp_v = []
-                        tmp_v.append(v[0])
-                        tmp_v.append(v[1])
-                        tmp_v.append(v[2])
+                        v = line.strip('\n').split('\t')
+                        tpm_v = []
+                        tpm_v.append(v[0])
+                        tpm_v.append(v[1])
+                        tpm_v.append(v[2])
                         if line_num == 1:
-                            tmp_v.append('TPM' + str(count))
+                            tpm_v.append('TPM' + str(count))
                         else:
-                            tmp_v.append(v[3])
-                        TPM.append(tmp_v)
+                            tpm_v.append(v[3])
+                        TPM.append(tpm_v)
+                        numreads_v = []
+                        numreads_v.append(v[0])
+                        numreads_v.append(v[1])
+                        numreads_v.append(v[2])
+                        if line_num == 1:
+                            numreads_v.append('NumReads' + str(count))
+                        else:
+                            numreads_v.append(v[4])
+                            #if v[4] != '':
+                            #    print v[4]
+                        #print numreads_v
+                        NumReads.append(numreads_v)
                 else:
                     line_num = 0
                     for line in d:
                         line_num = line_num + 1
-                        v = line.split('\t')
+                        v = line.strip('\n').split('\t')
                         if line_num == 1:
                             TPM[line_num - 1].append('TPM' + str(count))
+                            NumReads[line_num - 1].append('NumReads' + str(count))
                         else:
                             TPM[line_num - 1].append(v[3])
+                            NumReads[line_num - 1].append(v[4])
+    #print TPM
+    output_tpm = open(os.path.join(output_dir, 'TPM_Merge'), 'w')
+    output_numreads = open(os.path.join(output_dir, 'NumReads_Merge'), 'w')
+    for i in range(len(TPM)):
+        line_tpm = ''
+        line_numreads = ''
+        for j in range(len(TPM[i])):
+            line_tpm = line_tpm + str(TPM[i][j]) + '\t'
+            line_numreads = line_numreads + str(NumReads[i][j]) + '\t'
+        line_tpm = line_tpm + '\n'
+        line_numreads = line_numreads + '\n'
+        output_tpm.write(line_tpm)
+        output_numreads.write(line_numreads)
+    output_tpm.close()
+    output_numreads.close()
 
 
 
     return 0
 
-def convert_bam_to_fastq(input_dir, tmp_dir):
-    for dirs, files in os.walk(self.input_dir):
+def convert_bam_to_fastq(input_dir,tmp_dir):
+    print 'convert'
+    for root, dirs, files in os.walk(input_dir):
         for file_name in files:
-            input_path = os.path.join(input_dir, file_name)
+            input_path = os.path.join(root, file_name)
             output_path = os.path.join(tmp_dir, os.path.splitext(file_name)[0] + ".fastq")
             cmd = SAMTOOLS + ' fastq ' + input_path + ' > ' + output_path
+            print cmd
             os.system(cmd)
 
 
 def quantify(input_dir, output_dir, tool, index_file):
-    if self.tool == 'salmon':
-        self.salmon_quantify_mp(input_dir, output_dir, index_file)
+    if tool == 'salmon':
+        salmon_quantify_mp(input_dir, output_dir, index_file)
     
 def salmon_quantify(input_dir, output_dir, index_file,file_name):
     input_file_path = os.path.join(input_dir, file_name)
@@ -101,7 +143,7 @@ def salmon_quantify(input_dir, output_dir, index_file,file_name):
     os.system(cmd)
 
 def salmon_quantify_mp(input_dir, output_dir, index_file):
-    for root, dirs, files in os.walk(self.input_dir):
+    for root, dirs, files in os.walk(input_dir):
         pool = multiprocessing.Pool(processes = MAX_PROCESSES)
         for file_name in files:
             pool.apply_async(salmon_quantify, (input_dir, output_dir, index_file,file_name,))
@@ -158,7 +200,9 @@ def main(argv=None):
             print __doc__
             sys.exit(0)
 
-        quantify(input_dir, input_format, output_dir, tool, index_file)
+        #quantify(input_dir, input_format, output_dir, tool, index_file)
+        #merge_salmon_quant_result(output_dir)
+        RNAseqPrerpocessing(input_dir, input_format, output_dir, tool, index_file)
 
 
     except Usage, err:
