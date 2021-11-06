@@ -9,13 +9,16 @@ SALMON_ARGS=""
 
 current_env()
 {
-  echo "[Current Env]"
+cat << EOF
 
-  echo "  SALMON_INDEX  : ${SALMON_INDEX}"
-  echo "  SALMON_OUTPUT : ${SALMON_OUTPUT}"
-  echo "  FASTQ         : ${FASTQ}"
-  echo "  NUM_THREADS   : ${NUM_THREADS}"
-  echo "  SALMON_ARGS   : ${SALMON_ARGS}"
+[ Current Env ]
+  SALMON_INDEX  : ${SALMON_INDEX}
+  SALMON_OUTPUT : ${SALMON_OUTPUT}
+  FASTQ         : ${FASTQ}
+  NUM_THREADS   : ${NUM_THREADS}
+  SALMON_ARGS   : ${SALMON_ARGS}
+
+EOF
 }
 
 help_msg() 
