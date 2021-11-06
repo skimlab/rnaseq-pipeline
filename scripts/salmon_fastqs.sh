@@ -29,14 +29,14 @@ cat << EOF
 salmon_fastq.sh [options]
 
 [options]
-  -i=, --salmon_index=    : a folder where salmon index files are stored
-  -o=, --output=          : a folder where salmon outputs to be saved
-  -q=, --fastq=           : a folder for sample folders each of which contains
+  -i, --salmon_index    : a folder where salmon index files are stored
+  -o, --output          : a folder where salmon outputs to be saved
+  -q, --fastq           : a folder for sample folders each of which contains
                             fastq files (R1 and R2)
-  -p=, --num_threads=     : the number of threads to use for parallel processing
+  -p, --num_threads     : the number of threads to use for parallel processing
                             this is passed to 'salmon'.
-  --seqBias, --gcBias     : passed to 'salmon'
-  -h, --help              : print this message.
+  --seqBias, --gcBias   : passed to 'salmon'
+  -h, --help            : print this message.
 
 EOF
 }
