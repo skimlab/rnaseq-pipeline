@@ -26,7 +26,7 @@ fastqc_fastq.sh [options]
   -q, --fastq           : a folder for sample folders each of which contains
                             fastq files (R1 and R2)
   -p, --num_threads     : the number of threads to use for parallel processing
-                            this is passed to 'salmon'.
+                            this is passed to 'fastqc'.
   -h, --help            : print this message.
 
 EOF
